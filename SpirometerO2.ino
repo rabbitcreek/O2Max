@@ -19,13 +19,13 @@ double timeChecker = 0.0;
 #include <WiFi.h>
 #include <WiFiClient.h>
 #include <BlynkSimpleEsp32.h>
-char auth[] = "QF0VrkZ0PFlyAZAX6mpQhr0ak2A3Gwdl";//this is where your token from Blynk
+char auth[] = "";//this is where your token from Blynk
 
 
 // Your WiFi credentials.
 // Set password to "" for open networks.
-char ssid[] = "Palm2704";//your wifi network
-char pass[] = "9073456071  ";//your password
+char ssid[] = "";//your wifi network
+char pass[] = "";//your password
 
 TFT_eSPI tft = TFT_eSPI();  // Invoke library, pins defined in User_Setup.h
 
