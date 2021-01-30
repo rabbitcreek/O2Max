@@ -46,9 +46,14 @@ int totalBreath = 0;
 float massFlow = 0;
 float volFlow = 0;
 float volumeTotal = 0;
+float volumeMinute = 0;
 int sensorValue = 0;        // value read from the pot
 int outputValue = 0;        // value output to the PWM (analog out)
 float voltage = 0.0;
+float lastTemp = 0.0;
+float lastCotwo = 0.0;
+float lastOtwo = 0.0;
+float vo2Max = 0.0;
 float Pa = 0.0;
 int16_t adc0=0;
     double result;//After calculations holds the current O2 percentage
@@ -98,15 +103,18 @@ int calibrate(){
 }
 
 void loop() {
-  /*
+  if(totalBreath == 0)minuteTotal = millis();
   if((millis()- minuteTotal) > 60000){
     minuteTotal = millis();
-    //Serial.print( "Breaths per minute:");
-    //Serial.println(totalBreath);
-    Serial.print("                                        ");
+    Serial.print( "Breaths per minute:");
+    
     Serial.println(totalBreath);
+    Serial.print("Volume Exhaled One Minute: ");
+    Serial.println(volumeMinute);
+    goFigure();
     totalBreath = 0;
-  }*/
+    volumeMinute = 0;
+  }
   // read the analog in value:
   sensorValue = analogRead(analogInPin);
   // map it to the range of the analog out:
@@ -129,7 +137,9 @@ void loop() {
        Serial.println(totalBreath);
      
       }
+      volumeMinute = volumeMinute + volumeTotal;
       volumeTotal = 0;
+      
       newBreath = 1;
       
      
@@ -160,7 +170,7 @@ volumeTotal = volFlow * (millis() - TimerNow) + volumeTotal;
     secondsBreath = (millis() - timerBreath)/1000;
     if(secondsBreath > 0.1){
     Serial.print("time for breath");
-   Serial.println(secondsBreath);
+    Serial.println(secondsBreath);
     O2dump();
     CO2dump();
     }
@@ -178,10 +188,10 @@ void CO2dump(){
   {
     Serial.print("co2(ppm):");
     Serial.print(airSensor.getCO2());
-
+lastCotwo = airSensor.getCO2();
     Serial.print(" temp(C):");
     Serial.print(airSensor.getTemperature(), 1);
-
+lastTemp = airSensor.getTemperature();
     Serial.print(" humidity(%):");
     Serial.print(airSensor.getHumidity(), 1);
 
@@ -209,4 +219,36 @@ void O2dump(){
       result=(currentmv/calibratev)*20.9;
   Serial.print("O2%:  ");
   Serial.println(result);
+  lastOtwo = result;
+}
+void goFigure(){
+  float percentN2exp;
+  float co2;
+  
+  volumeMinute = volumeMinute/1000.0; //gives liters of air VE
+  Serial.print("liters/min uncorrected");
+  Serial.print(volumeMinute);
+  co2 = lastCotwo/10000.0;
+  lastOtwo = 17.5;
+  Serial.print("CO2  ");
+  Serial.print(co2);
+  Serial.print("02  ");
+  Serial.println(lastOtwo);
+  percentN2exp = (100.0 - (co2 + lastOtwo));
+  Serial.print("%N  ");
+  Serial.println(percentN2exp);
+  volumeMinute = volumeMinute * (273/(273 + lastTemp)) * ((760.0 - 25.2)/760);
+  Serial.print("liters/min corrected  ");
+  Serial.print(volumeMinute);
+  vo2Max = volumeMinute * (((percentN2exp/100.0) * 0.265) - (lastOtwo/100.0));
+  Serial.print(lastOtwo/100.0);
+  Serial.print("This: ");
+  Serial.print((percentN2exp/100.0 * 0.265) - (lastOtwo/100.0));
+  Serial.print("VO2Max!  ");
+  Serial.print(vo2Max);
+  vo2Max = (vo2Max * 1000.0)/(152.0/2.2);
+  Serial.print("VO2Max!!!ml/kg:  ");
+  Serial.print(vo2Max);
+  
+  
 }
