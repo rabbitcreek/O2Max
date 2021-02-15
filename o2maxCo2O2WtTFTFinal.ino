@@ -126,7 +126,11 @@ while(buttonPushCounter2 < 3)wtRead();
 }
 
 void loop() {
-  if(totalBreath == 0)minuteTotal = millis();
+  if(! digitalRead(buttonPin1)){
+    totalBreath = 0;
+    volumeMinute = 0;
+  }
+  if(totalBreath == 0)minuteTotal = millis();              
   if((millis()- minuteTotal) > 30000){
     minuteTotal = millis();
     Serial.print( "Breaths per minute:");
@@ -196,6 +200,7 @@ volumeTotal = volFlow * (millis() - TimerNow) + volumeTotal;
     Serial.println(secondsBreath);
     O2dump();
     CO2dump();
+    screen();
     }
     //Serial.print(volumeTotal);
     
@@ -307,7 +312,11 @@ void goFigure(){
   tft.setCursor(120, 40, 7);
   
   if(vo2Max > vo2MaxMax) vo2MaxMax = vo2Max;
-   tft.println(vo2MaxMax); 
+   tft.println(vo2MaxMax);
+   tft.setCursor(160, 115, 4);
+   tft.setTextColor(TFT_GREEN, TFT_RED);
+   tft.println("RESET"); 
+   
    
   
   
@@ -360,4 +369,23 @@ void wtRead(){
   int counter = 30 + (40 * buttonPushCounter2);
   tft.drawNumber(buttonPushCounter1,counter,40,7);
   }
+}
+void screen(){
+  tft.fillScreen(TFT_BLACK);
+  tft.setTextColor(TFT_GREEN, TFT_BLACK);
+  tft.drawCentreString("TotalVol",50,10,4);
+  tft.setTextColor(TFT_BLACK, TFT_BLACK);
+  tft.drawString("888888",40,80,7);
+  tft.setTextColor(TFT_WHITE, TFT_BLACK); // Orange
+  //tft.drawNumber(vo2Max,40,80,7);
+  tft.setCursor(100, 40, 7);
+  int puff = volumeMinute;
+ 
+   tft.println(puff); 
+   tft.setCursor(160, 115, 4);
+   tft.setTextColor(TFT_GREEN, TFT_BLACK);
+   tft.println("RESET");
+   tft.setCursor(20, 115, 4);
+   int  timeNow = (millis()- minuteTotal)/1000;
+   tft.println(timeNow);
 }
