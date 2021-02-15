@@ -1,24 +1,4 @@
-/*
-  Analog input, analog output, serial output
 
-  Reads an analog input pin, maps the result to a range from 0 to 255 and uses
-  the result to set the pulse width modulation (PWM) of an output pin.
-  Also prints the results to the Serial Monitor.
-
-  The circuit:
-  - potentiometer connected to analog pin 0.
-    Center pin of the potentiometer goes to the analog pin.
-    side pins of the potentiometer go to +5V and ground
-  - LED connected from digital pin 9 to ground
-
-  created 29 Dec. 2008
-  modified 9 Apr 2012
-  by Tom Igoe
-
-  This example code is in the public domain.
-
-  http://www.arduino.cc/en/Tutorial/AnalogInOutSerial
-*/
 #include "DFRobot_OxygenSensor.h"
 #include <TFT_eSPI.h> // Graphics and font library for ST7735 driver chip
 #include <SPI.h>
@@ -28,12 +8,6 @@ const int  buttonPin1 = 0;
 const int  buttonPin2 = 35; 
 #define COLLECT_NUMBER    10             // collect number, the collection range is 1-100.
 #define Oxygen_IICAddress ADDRESS_3
-/*   iic slave Address, The default is ADDRESS_3.
-       ADDRESS_0               0x70      // iic device address.
-       ADDRESS_1               0x71
-       ADDRESS_2               0x72
-       ADDRESS_3               0x73
-*/
 
 DFRobot_OxygenSensor Oxygen;
 #include <Wire.h>
@@ -86,11 +60,9 @@ float coTotal = 0;
 float oAverage = 0;
 float coAverage = 0;
 void setup() {
-   
-  // initialize serial communications at 9600 bps:
   Serial.begin(115200);
-   Wire.begin();
- while(!Oxygen.begin(Oxygen_IICAddress)) {
+  Wire.begin();
+  while(!Oxygen.begin(Oxygen_IICAddress)) {
     Serial.println("I2c device number error !");
     delay(1000);
   }
@@ -110,6 +82,11 @@ void setup() {
   pinMode(buttonPin2, INPUT_PULLUP);
   tft.setTextColor(TFT_GREEN, TFT_RED);
   tft.drawCentreString("Enter Weight in LBS",120,12,4);
+  tft.setCursor(180, 115, 4);
+  tft.setTextColor(TFT_GREEN, TFT_RED);
+  tft.println("UP");
+  
+  
   for (int thisReading = 0; thisReading < numReadings; thisReading++) {
     oReadings[thisReading] = 0;
   }
@@ -121,7 +98,10 @@ void setup() {
 while(buttonPushCounter2 < 3)wtRead();
   tft.fillScreen(TFT_RED);
   tft.setTextColor(TFT_GREEN, TFT_RED);   
-  tft.drawCentreString("READY",120,60,4);
+  tft.drawCentreString("VO2  MAX",120,60,4);
+  tft.setCursor(160, 115, 4);
+  tft.setTextColor(TFT_GREEN, TFT_RED);
+  tft.println("GO!");
   minuteTotal = millis();
 }
 
@@ -130,14 +110,16 @@ void loop() {
     totalBreath = 0;
     volumeMinute = 0;
   }
+  if(! digitalRead(buttonPin2)){
+    screenMax();
+  }
   if(totalBreath == 0)minuteTotal = millis();              
   if((millis()- minuteTotal) > 30000){
     minuteTotal = millis();
-    Serial.print( "Breaths per minute:");
-    
-    Serial.println(totalBreath);
-    Serial.print("Volume Exhaled One Minute: ");
-    Serial.println(volumeMinute);
+    //Serial.print( "Breaths per minute:");   
+    //Serial.println(totalBreath);
+    //Serial.print("Volume Exhaled One Minute: ");
+    //Serial.println(volumeMinute);
     totalBreath = 0;
     goFigure();   
     volumeMinute = 0;
@@ -158,10 +140,10 @@ void loop() {
 
  if(volumeTotal > 300){
       totalBreath = totalBreath + 1;
-      Serial.print("Breathvolume:");
-      Serial.print(volumeTotal);
-       Serial.print("     TotalBreaths: ");
-       Serial.println(totalBreath);
+      //Serial.print("Breathvolume:");
+      //Serial.print(volumeTotal);
+      //Serial.print("     TotalBreaths: ");
+      //Serial.println(totalBreath);
      
       }
       volumeMinute = volumeMinute + volumeTotal;
@@ -171,42 +153,22 @@ void loop() {
       
      
     }
-  
-    
-  
-  // change the analog out value:
-  //analogWrite(analogOutPin, outputValue);
 massFlow = 1000*sqrt((abs(Pa)*2*rho)/((1/(pow(area_2,2)))-(1/(pow(area_1,2)))));
 volFlow = massFlow/rho; //volumetric flow of air
 volumeTotal = volFlow * (millis() - TimerNow) + volumeTotal;
-  // print the results to the Serial Monitor:
-  //Serial.print("sensor = ");
-  //Serial.print(sensorValue);
-  //Serial.print("VolumeTotal= ");
-  //Serial.println(volumeTotal);
- 
-  //Serial.print("\t pressure = ");
-  //Serial.println(Pa);
-
-  // wait 2 milliseconds before the next loop for the analog-to-digital
-  // converter to settle after the last reading:
   
   } else if(newBreath){
     newBreath = 0;
    
     secondsBreath = (millis() - timerBreath)/1000;
     if(secondsBreath > 0.1){
-    Serial.print("time for breath");
-    Serial.println(secondsBreath);
+    //Serial.print("time for breath");
+    //Serial.println(secondsBreath);
     O2dump();
     CO2dump();
     screen();
     }
-    //Serial.print(volumeTotal);
     
-   //Serial.print("              ");
-    //Serial.println(secondsBreath);
-    //logfile.flush();
   }
   TimerNow = millis();
   delay(20);
@@ -214,15 +176,15 @@ volumeTotal = volFlow * (millis() - TimerNow) + volumeTotal;
 void CO2dump(){
   if (airSensor.dataAvailable())
   {
-    Serial.print("co2(ppm):");
-    Serial.print(airSensor.getCO2());
+    //Serial.print("co2(ppm):");
+    //Serial.print(airSensor.getCO2());
 lastCotwo = airSensor.getCO2();
-    Serial.print(" temp(C):");
-    Serial.print(airSensor.getTemperature(), 1);
+    //Serial.print(" temp(C):");
+    //Serial.print(airSensor.getTemperature(), 1);
 lastTemp = airSensor.getTemperature();
-    Serial.print(" humidity(%):");
-    Serial.print(airSensor.getHumidity(), 1);
-    Serial.println();
+    //Serial.print(" humidity(%):");
+    //Serial.print(airSensor.getHumidity(), 1);
+    //Serial.println();
     // subtract the last reading:
   coTotal = coTotal - coReadings[coreadIndex];
   // read from the sensor:
@@ -246,13 +208,13 @@ lastTemp = airSensor.getTemperature();
   else
     Serial.println("Waiting for new data");
 
-  delay(500);
+   delay(500);
 }
 void O2dump(){
   float oxygenData = Oxygen.ReadOxygenData(COLLECT_NUMBER);
-  Serial.print(" Oxygen concentration is ");
-  Serial.print(oxygenData);
-  Serial.println(" %vol");
+  //Serial.print(" Oxygen concentration is ");
+  //Serial.print(oxygenData);
+  //Serial.println(" %vol");
  // subtract the last reading:x                                                    
   oTotal = oTotal - oReadings[oreadIndex];
   // read from the sensor:
@@ -279,37 +241,37 @@ void goFigure(){
   float co2;
   volumeMinute = volumeMinute * 2.0;
   volumeMinute = volumeMinute/1000.0; //gives liters of air VE
-  Serial.print("liters/min uncorrected");
-  Serial.print(volumeMinute);
+  //Serial.print("liters/min uncorrected");
+  //Serial.print(volumeMinute);
   co2 = lastCotwo/10000.0;
   //lastOtwo = 17.5;
-  Serial.print("CO2  ");
-  Serial.print(co2);
-  Serial.print("02  ");
-  Serial.println(lastOtwo);
+  //Serial.print("CO2  ");
+  //Serial.print(co2);
+  //Serial.print("02  ");
+  //Serial.println(lastOtwo);
   percentN2exp = (100.0 - (co2 + lastOtwo));
-  Serial.print("%N  ");    
-  Serial.println(percentN2exp);
+  //Serial.print("%N  ");    
+  //Serial.println(percentN2exp);
   volumeMinute = volumeMinute * (273/(273 + lastTemp)) * ((760.0 - 25.2)/760);
-  Serial.print("liters/min corrected  ");
-  Serial.print(volumeMinute);
+  //Serial.print("liters/min corrected  ");
+  //Serial.print(volumeMinute);
   vo2Max = volumeMinute * (((percentN2exp/100.0) * 0.265) - (lastOtwo/100.0));
-  Serial.print(lastOtwo/100.0);
-  Serial.print("This: ");
-  Serial.print((percentN2exp/100.0 * 0.265) - (lastOtwo/100.0));
-  Serial.print("VO2Max!  ");
-  Serial.print(vo2Max);
+  //Serial.print(lastOtwo/100.0);
+  //Serial.print("This: ");
+  //Serial.print((percentN2exp/100.0 * 0.265) - (lastOtwo/100.0));
+  //Serial.print("VO2Max!  ");
+  //Serial.print(vo2Max);
   vo2Max = (vo2Max * 1000.0)/(float(wtTotal)/2.2);
-  Serial.print("VO2Max!!!ml/kg:  ");
-  Serial.print(vo2Max);
+  //Serial.print("VO2Max!!!ml/kg:  ");
+  //Serial.print(vo2Max);
   tft.fillScreen(TFT_RED);
   tft.setTextColor(TFT_GREEN, TFT_RED);
-  tft.drawCentreString("VO2Max= ",60,60,4);
+  tft.drawCentreString("VO2Max= ",60,10,4);
   tft.setTextColor(TFT_RED, TFT_RED);
-  tft.drawString("888888",140,40,7);
+  tft.drawString("888888",70,40,7);
   tft.setTextColor(TFT_WHITE, TFT_RED); // Orange
   //tft.drawNumber(vo2Max,100,40,7);
-  tft.setCursor(120, 40, 7);
+  tft.setCursor(70, 40, 7);
   
   if(vo2Max > vo2MaxMax) vo2MaxMax = vo2Max;
    tft.println(vo2MaxMax);
@@ -329,9 +291,9 @@ void wtRead(){
     if (buttonState1 == LOW) {
       // if the current state is HIGH then the button went from off to on:
       buttonPushCounter1++;
-      Serial.println("on");
-      Serial.print("number of button pushes: ");
-      Serial.println(buttonPushCounter1);
+      //Serial.println("on");
+      //Serial.print("number of button pushes: ");
+      //Serial.println(buttonPushCounter1);
       if(buttonPushCounter1 == 10)buttonPushCounter1 = 0;
     } else {
       // if the current state is LOW then the button went from on to off:
@@ -349,12 +311,10 @@ void wtRead(){
       buttonPushCounter2++;
       wtTotal = wtTotal + 1000/pow(10, buttonPushCounter2) * buttonPushCounter1;
       buttonPushCounter1  = 0;
-      Serial.println("on");
-      Serial.print("number of button pushes: ");
-      Serial.println(buttonPushCounter2);
+      
       if(buttonPushCounter2 == 3){
-        Serial.print("total wt = ");
-        Serial.print(wtTotal);
+        //Serial.print("total wt = ");
+        //Serial.print(wtTotal);
       }
     } else {
       // if the current state is LOW then the button went from on to off:
@@ -387,5 +347,23 @@ void screen(){
    tft.println("RESET");
    tft.setCursor(20, 115, 4);
    int  timeNow = (millis()- minuteTotal)/1000;
+    tft.setTextColor(TFT_WHITE, TFT_BLACK);
    tft.println(timeNow);
+}
+void screenMax(){
+  tft.fillScreen(TFT_RED);
+  tft.setTextColor(TFT_GREEN, TFT_RED);
+  tft.drawCentreString("VO2Max= ",60,10,4);
+  tft.setTextColor(TFT_RED, TFT_RED);
+  tft.drawString("888888",70,40,7);
+  tft.setTextColor(TFT_WHITE, TFT_RED); // Orange
+  //tft.drawNumber(vo2Max,100,40,7);
+  tft.setCursor(70, 40, 7);
+  
+  if(vo2Max > vo2MaxMax) vo2MaxMax = vo2Max;
+  
+   tft.println(vo2MaxMax);
+   tft.setCursor(160, 115, 4);
+   tft.setTextColor(TFT_GREEN, TFT_RED);
+   tft.println("RESET"); 
 }
